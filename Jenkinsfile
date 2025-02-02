@@ -11,7 +11,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo 'Checking out repository...'
-                git 'https://github.com/group-navyseal/sample-hello-navyseal.git'
+                git 'https://github.com/EmmanuelGodinez/flask-hello-navyseal.git'
             }
         }
 
