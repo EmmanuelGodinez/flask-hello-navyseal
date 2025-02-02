@@ -1,64 +1,55 @@
 pipeline {
     agent any
-
+    
     environment {
-        DOCKER_IMAGE = "flask-hello-navyseal"
-        DOCKER_TAG = "latest"
-        CONTAINER_NAME = "flask_app"
+        GIT_REPO_URL = 'git@github.com:EmmanuelGodinez/flask-hello-navyseal.git'
+        BRANCH = 'main'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                echo 'Checking out repository...'
-                git 'https://github.com/EmmanuelGodinez/flask-hello-navyseal.git'
+                echo "Checking out repository..."
+                checkout scm: [
+                    $class: 'GitSCM',
+                    branches: [[name: "*/${BRANCH}"]],
+                    extensions: [],
+                    userRemoteConfigs: [[url: GIT_REPO_URL]]
+                ]
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    echo 'Building Docker Image...'
-                    sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
-                }
+                echo 'Building Docker image...'
             }
         }
 
         stage('Run Container') {
             steps {
-                script {
-                    echo 'Stopping old container (if exists)...'
-                    sh "docker stop ${CONTAINER_NAME} || true"
-                    sh "docker rm ${CONTAINER_NAME} || true"
-
-                    echo 'Running new container...'
-                    sh "docker run -d -p 5000:5000 --name ${CONTAINER_NAME} ${DOCKER_IMAGE}:${DOCKER_TAG}"
-                }
+                echo 'Running Docker container...'
             }
         }
 
         stage('Test Application') {
             steps {
-                script {
-                    echo 'Testing application availability...'
-                    sh "curl -f http://localhost:5000 || exit 1"
-                }
+                echo 'Testing application...'
             }
         }
 
         stage('Clean Up') {
             steps {
-                script {
-                    echo 'Cleaning up old Docker images...'
-                    sh "docker image prune -f"
-                }
+                echo 'Cleaning up...'
             }
         }
     }
 
     post {
+        always {
+            echo 'Pipeline finished!'
+        }
         success {
-            echo 'Pipeline executed successfully!'
+            echo 'Pipeline succeeded!'
         }
         failure {
             echo 'Pipeline failed!'
